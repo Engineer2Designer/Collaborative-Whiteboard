@@ -12,7 +12,8 @@ HOST = 'localhost'
 PORT = 5050
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-context.load_verify_locations('certificate.crt') 
+context.load_verify_locations('certificate.crt')
+context.check_hostname = False 
 
 try:
     client = context.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM), server_hostname=HOST)
@@ -82,14 +83,14 @@ def handle_special_command(command):
         elif command == 'UNDO':
             if lines:
                 last_item = lines.pop()
-                line_coords = canvas.coords(last_item)  # Get coordinates of the line
-                line_color = canvas.itemcget(last_item, "fill")  # Get color of the line
-                line_thickness = canvas.itemcget(last_item, "width")  # Get thickness of the line
+                line_coords = canvas.coords(last_item)  
+                line_color = canvas.itemcget(last_item, "fill") 
+                line_thickness = canvas.itemcget(last_item, "width")
                 removed_lines.append((last_item, line_coords, line_color, line_thickness))
                 canvas.delete(last_item)       
         elif command == 'REDO':
             if removed_lines:
-                line_to_restore = removed_lines.pop()  # Get the properties of the line
+                line_to_restore = removed_lines.pop()  
                 new_line_id = canvas.create_line(line_to_restore[1], width=line_to_restore[3], fill=line_to_restore[2], capstyle=ROUND)
                 lines.append(new_line_id)
         
@@ -116,17 +117,17 @@ def clear_canvas():
 
 def undo():
     if lines:
-        last_item = lines.pop()  # Remove the last drawn line
-        line_coords = canvas.coords(last_item)  # Get coordinates of the line
-        line_color = canvas.itemcget(last_item, "fill")  # Get color of the line
-        line_thickness = canvas.itemcget(last_item, "width")  # Get thickness of the line
-        removed_lines.append((last_item, line_coords, line_color, line_thickness))  # Store line properties
+        last_item = lines.pop()
+        line_coords = canvas.coords(last_item)
+        line_color = canvas.itemcget(last_item, "fill")
+        line_thickness = canvas.itemcget(last_item, "width")
+        removed_lines.append((last_item, line_coords, line_color, line_thickness))  
         canvas.delete(last_item)
         client.sendall(b'UNDO')
 
 def redo():
     if removed_lines:
-        line_to_restore = removed_lines.pop()  # Get the properties of the line
+        line_to_restore = removed_lines.pop()  
         new_line_id = canvas.create_line(line_to_restore[1], width=line_to_restore[3], fill=line_to_restore[2], capstyle=ROUND)
         lines.append(new_line_id)
         client.sendall(b'REDO')
@@ -152,6 +153,7 @@ def get_current_value():
 def update_brush_thickness(value):
     global brush_thickness
     brush_thickness = round(float(value))
+    value_label.config(text=get_current_value())
 
 Button(root, text="Choose Color", bg="#f2f3f5", command=open_color_picker).place(x=10, y=360)
 Button(root, text="Undo", bg="#f2f3f5", command=undo).place(x=5, y=400)
